@@ -3,7 +3,7 @@
 #
 # Use official rust image to for application build
 # ---------------------------------------------------
-FROM rust:1.66.1 as build
+FROM rust:1.83.0 AS build
 
 # Setup working directory
 WORKDIR /usr/src/rustagram
@@ -11,10 +11,11 @@ COPY . .
 COPY .env .env
 
 # Install dependency (Required by diesel)
-RUN apt-get update && apt-get install libpq5 -y && apt-get install libssl-dev
+RUN apt-get update && apt-get install libpq5 -y && apt-get install libssl-dev -y
+
 
 # Build application
-RUN cargo build --path .
+RUN cargo install --path .
 
 # ---------------------------------------------------
 # 2 - Deploy Stage
@@ -27,7 +28,7 @@ FROM gcr.io/distroless/cc-debian11
 
 # Set the architecture argument (arm64, i.e. aarch64 as default)
 # For amd64, i.e. x86_64, you can append a flag when invoking the build `... --build-arg "ARCH=x86_64"`
-ARG ARCH=aarch64
+ARG ARCH=x86_64
 
 # libpq related (required by diesel)
 COPY --from=build /usr/lib/${ARCH}-linux-gnu/libpq.so* /usr/lib/${ARCH}-linux-gnu/
