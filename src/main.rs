@@ -1,34 +1,23 @@
 #![cfg_attr(feature = "clippy", feature(plugin))]
 #![cfg_attr(feature = "clippy", plugin(clippy))]
 
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{web, App, HttpServer};
 mod app;
 mod common;
 mod config;
 use app::user::controller as user_controller;
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    user_controller::loler();
-    HttpResponse::Ok().body("Hello world!")
-}
-
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
-}
-
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
-}
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
-        App::new()
-            .service(hello)
-            .service(echo)
-            .route("/hey", web::get().to(manual_hello))
+        App::new().service(
+            web::scope("/users")
+                .service(user_controller::get)
+                .service(user_controller::update)
+                .service(user_controller::delete)
+                .service(user_controller::find)
+                .service(user_controller::create),
+        )
     })
     .bind(("127.0.0.1", 8080))?
     .run()

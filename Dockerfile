@@ -8,13 +8,13 @@ FROM rust:1.66.1 as build
 # Setup working directory
 WORKDIR /usr/src/rustagram
 COPY . .
-COPY .env.docker .env
+COPY .env .env
 
 # Install dependency (Required by diesel)
-RUN apt-get update && apt-get install libpq5 -y
+RUN apt-get update && apt-get install libpq5 -y && apt-get install libssl-dev
 
 # Build application
-RUN cargo install --path .
+RUN cargo build --path .
 
 # ---------------------------------------------------
 # 2 - Deploy Stage
