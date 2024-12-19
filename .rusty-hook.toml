@@ -1,5 +1,5 @@
 [hooks]
-pre-commit = "npx --no-install -- commitlint --verbose --edit $1 && cargo fmt && cargo clippy && cargo check && cargo test"
+pre-commit = "./hooks/pre-commit.sh"
 
 [logging]
 verbose = true
