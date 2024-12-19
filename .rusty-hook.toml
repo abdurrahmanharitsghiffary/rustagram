@@ -1,5 +1,5 @@
 [hooks]
-pre-commit = "cargo fmt && cargo clippy && cargo check && cargo test && npx --no-install -- commitlint --verbose --edit \"$1\""
+pre-commit = "npx --no-install -- commitlint --verbose --edit $1 && cargo fmt && cargo clippy && cargo check && cargo test"
 
 [logging]
 verbose = true
