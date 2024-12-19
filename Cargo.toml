@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+clippy = { version = "*", optional = true }
 actix-web = "4"
 diesel = { version = "2.2.0", features = ["postgres"] }
 # build libpq and openssl as part of the build process
@@ -11,3 +12,9 @@ diesel = { version = "2.2.0", features = ["postgres"] }
 # pq-sys = { version = "0.6", features = ["bundled"] }
 # openssl-sys = { version = "0.9.100", features = ["vendored"] } 
 dotenvy = "0.15"
+
+[dev-dependencies]
+rusty-hook = "^0.11.2"
+
+[features]
+default = []

@@ -1,0 +1,5 @@
+[hooks]
+pre-commit = "cargo fmt && cargo clippy && cargo check && cargo test && npx --no-install -- commitlint --verbose --edit \"$1\""
+
+[logging]
+verbose = true

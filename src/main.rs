@@ -1,3 +1,6 @@
+#![cfg_attr(feature = "clippy", feature(plugin))]
+#![cfg_attr(feature = "clippy", plugin(clippy))]
+
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 mod app;
 mod common;
