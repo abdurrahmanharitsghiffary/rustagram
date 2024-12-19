@@ -1,7 +1,12 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+mod app;
+mod common;
+mod config;
+use app::user::controller as user_controller;
 
 #[get("/")]
 async fn hello() -> impl Responder {
+    user_controller::loler();
     HttpResponse::Ok().body("Hello world!")
 }
 
