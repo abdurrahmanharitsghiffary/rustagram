@@ -10,10 +10,6 @@ WORKDIR /usr/src/rustagram
 COPY . .
 COPY .env .env
 
-# Install dependency (Required by diesel)
-RUN apt-get update && apt-get install libpq5 -y && apt-get install libssl-dev -y
-
-
 # Build application
 RUN cargo install --path .
 

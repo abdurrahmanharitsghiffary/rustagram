@@ -6,11 +6,14 @@ mod app;
 mod common;
 mod config;
 use app::user::controller as user_controller;
+use env_logger::Env;
+use tracing_actix_web::TracingLogger;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    env_logger::init_from_env(Env::default().default_filter_or("trace"));
     HttpServer::new(|| {
-        App::new().service(
+        App::new().wrap(TracingLogger::default()).service(
             web::scope("/users")
                 .service(user_controller::get)
                 .service(user_controller::update)
