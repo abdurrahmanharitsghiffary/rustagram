@@ -22,7 +22,7 @@ pub async fn create_rabbitmq_channel(queue_names: &[QueueName], pool: &Pool) -> 
                 FieldTable::default(),
             )
             .await
-            .expect(&format!("Failed to declare {}", queue_name.value()));
+            .expect(&format!("Failed to declare {}", &queue_name.value()));
     }
 
     channel
