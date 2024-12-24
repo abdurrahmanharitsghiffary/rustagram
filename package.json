@@ -4,7 +4,6 @@
   "description": "## Instagram Clone API using rust",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "husky"
   },
   "keywords": [],
