@@ -20,7 +20,7 @@ struct AppState {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     if env::var_os("RUST_LOG").is_none() {
-        env::set_var("RUST_LOG", "actix_web=info");
+        env::set_var("RUST_LOG", "info");
     }
 
     dotenvy::dotenv().ok();
