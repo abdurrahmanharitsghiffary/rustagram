@@ -7,34 +7,45 @@ use tracing;
 pub struct WebResponse<T> {
     pub data: T,
     pub status_code: u16,
-    pub message: &'static str,
+    pub message: String,
 }
 
 #[derive(Serialize)]
 pub struct PaginatedWebResponse<T> {
     pub data: T,
     pub status_code: u16,
-    pub message: &'static str,
+    pub message: String,
     pub metadata: Metadata,
 }
 
 #[derive(Serialize)]
 pub struct WebErrorResponse {
     pub status_code: u16,
-    pub message: &'static str,
+    pub message: String,
     pub errors: Vec<WebErrorDetail>,
 }
 
 #[derive(Serialize)]
 pub struct WebErrorDetail {
-    pub message: &'static str,
-    pub reason: &'static str,
-    pub code: WebErrorCode,
+    pub message: String,
+    pub code: String,
 }
 
 #[derive(Serialize)]
 pub enum WebErrorCode {
     NotFound,
+    WeakPassword,
+    FailedConnect,
+}
+
+impl WebErrorCode {
+    pub fn value(&self) -> &'static str {
+        match *self {
+            Self::NotFound => "not_found",
+            Self::WeakPassword => "weak_password",
+            Self::FailedConnect => "fail_conn",
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -71,14 +82,6 @@ impl Responder for WebErrorResponse {
 
 impl<T: Serialize> WebResponse<T> {
     fn serialize_and_respond(self) -> HttpResponse<BoxBody> {
-        let body = match serde_json::to_string(&self) {
-            Ok(body) => body,
-            Err(err) => {
-                tracing::error!("Error serializing response body: {:?}", err);
-                return HttpResponse::InternalServerError().finish();
-            }
-        };
-
         let status_code = match StatusCode::from_u16(self.status_code) {
             Ok(body) => body,
             Err(err) => {
@@ -87,20 +90,12 @@ impl<T: Serialize> WebResponse<T> {
             }
         };
 
-        HttpResponse::build(status_code).body(body)
+        HttpResponse::build(status_code).json(self)
     }
 }
 
 impl<T: Serialize> PaginatedWebResponse<T> {
     fn serialize_and_respond(self) -> HttpResponse<BoxBody> {
-        let body = match serde_json::to_string(&self) {
-            Ok(body) => body,
-            Err(err) => {
-                tracing::error!("Error serializing response body: {:?}", err);
-                return HttpResponse::InternalServerError().finish();
-            }
-        };
-
         let status_code = match StatusCode::from_u16(self.status_code) {
             Ok(body) => body,
             Err(err) => {
@@ -109,20 +104,12 @@ impl<T: Serialize> PaginatedWebResponse<T> {
             }
         };
 
-        HttpResponse::build(status_code).body(body)
+        HttpResponse::build(status_code).json(self)
     }
 }
 
 impl WebErrorResponse {
     fn serialize_and_respond(self) -> HttpResponse<BoxBody> {
-        let body = match serde_json::to_string(&self) {
-            Ok(body) => body,
-            Err(err) => {
-                tracing::error!("Error serializing response body: {:?}", err);
-                return HttpResponse::InternalServerError().finish();
-            }
-        };
-
         let status_code = match StatusCode::from_u16(self.status_code) {
             Ok(body) => body,
             Err(err) => {
@@ -131,6 +118,6 @@ impl WebErrorResponse {
             }
         };
 
-        HttpResponse::build(status_code).body(body)
+        HttpResponse::build(status_code).json(self)
     }
 }

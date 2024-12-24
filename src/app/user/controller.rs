@@ -1,26 +1,37 @@
 use actix_web::{delete, get, patch, post, web, HttpResponse, Responder};
 
 #[get("/{id}")]
-pub async fn get(path: web::Path<String>) -> impl Responder {
+async fn find(path: web::Path<String>) -> impl Responder {
     HttpResponse::Ok().body(format!("Hello World {}", path))
 }
 
 #[get("/")]
-pub async fn find() -> impl Responder {
+async fn find_many() -> impl Responder {
     HttpResponse::Ok().body("Hello World")
 }
 
 #[patch("/{id}")]
-pub async fn update(path: web::Path<String>) -> impl Responder {
+async fn update(path: web::Path<String>) -> impl Responder {
     HttpResponse::NoContent()
 }
 
 #[delete("/{id}")]
-pub async fn delete(path: web::Path<String>) -> impl Responder {
+async fn delete(path: web::Path<String>) -> impl Responder {
     HttpResponse::NoContent()
 }
 
 #[post("/")]
-pub async fn create() -> impl Responder {
+async fn create() -> impl Responder {
     HttpResponse::Created()
+}
+
+pub fn config(conf: &mut web::ServiceConfig) {
+    let scope = web::scope("/users")
+        .service(find)
+        .service(find_many)
+        .service(update)
+        .service(delete)
+        .service(create);
+
+    conf.service(scope);
 }
