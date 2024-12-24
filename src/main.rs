@@ -2,10 +2,13 @@
 #![cfg_attr(feature = "clippy", plugin(clippy))]
 
 use actix_cors::Cors;
-use actix_web::{http::header, web, App, HttpServer};
+use actix_web::{http::header, rt::System, web, App, HttpServer};
 mod app;
 mod common;
 mod config;
+use common::service::rabbitmq::{
+    channel::create_rabbitmq_channel, consumer::email_consumer, queue_name::QueueName,
+};
 use env_logger::Env;
 use lapin::ConnectionProperties;
 use sqlx::{postgres::PgPoolOptions, Postgres};
@@ -60,32 +63,38 @@ async fn main() -> std::io::Result<()> {
         .build()
         .expect("Failed to create RabbitMQ pool");
 
-    HttpServer::new(move || {
-        let cors = Cors::default()
-            .allowed_origin("http://localhost:3000")
-            .allowed_methods(vec!["GET", "POST", "PATCH", "DELETE"])
-            .allowed_headers(vec![
-                header::CONTENT_TYPE,
-                header::AUTHORIZATION,
-                header::ACCEPT,
-            ])
-            .supports_credentials();
+    System::new().block_on(async {
+        let channel = create_rabbitmq_channel(&[QueueName::EmailQueue], &ampq_pool).await;
 
-        App::new()
-            .app_data(web::Data::new(AppState {
-                db: pg_pool.clone(),
-                ampq: ampq_pool.clone(),
-            }))
-            .service(
-                web::scope("/api/v1")
-                    .configure(app::auth::controller::config)
-                    .configure(app::user::controller::config),
-            )
-            .configure(app::health::controller::config)
-            .wrap(cors)
-            .wrap(TracingLogger::default())
+        tokio::spawn(email_consumer(channel.clone()));
+
+        HttpServer::new(move || {
+            let cors = Cors::default()
+                .allowed_origin("http://localhost:3000")
+                .allowed_methods(vec!["GET", "POST", "PATCH", "DELETE"])
+                .allowed_headers(vec![
+                    header::CONTENT_TYPE,
+                    header::AUTHORIZATION,
+                    header::ACCEPT,
+                ])
+                .supports_credentials();
+
+            App::new()
+                .app_data(web::Data::new(AppState {
+                    db: pg_pool.clone(),
+                    ampq: ampq_pool.clone(),
+                }))
+                .service(
+                    web::scope("/api/v1")
+                        .configure(app::auth::controller::config)
+                        .configure(app::user::controller::config),
+                )
+                .configure(app::health::controller::config)
+                .wrap(cors)
+                .wrap(TracingLogger::default())
+        })
+        .bind(("127.0.0.1", 8080))?
+        .run()
+        .await
     })
-    .bind(("127.0.0.1", 8080))?
-    .run()
-    .await
 }

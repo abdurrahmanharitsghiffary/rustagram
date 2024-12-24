@@ -5,7 +5,7 @@ use lettre::{
     SmtpTransport, Transport,
 };
 
-pub fn send_email(to: &'static str, subject: &'static str, body: String) -> Result<(), String> {
+pub fn send_email(to: &str, subject: &str, body: &str) -> Result<(), String> {
     let email = match Message::builder()
         .from(
             "Rustagram <rustagram124@gmail.com>"
@@ -15,7 +15,7 @@ pub fn send_email(to: &'static str, subject: &'static str, body: String) -> Resu
         .to(to.parse().expect("Failed to parse [email.to]"))
         .subject(subject)
         .header(ContentType::TEXT_HTML)
-        .body(body)
+        .body(body.to_string())
     {
         Ok(message) => message,
         Err(e) => return Err(format!("Could not send email: {e:?}")),

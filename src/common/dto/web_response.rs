@@ -1,6 +1,5 @@
 use actix_web::{body::BoxBody, http::StatusCode, HttpRequest, HttpResponse, Responder};
 use serde::Serialize;
-use serde_json;
 use tracing;
 
 #[derive(Serialize)]
