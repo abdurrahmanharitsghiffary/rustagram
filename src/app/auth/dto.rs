@@ -7,7 +7,7 @@ static UUID_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(
         "[0-9A-Za-z]{8}-[0-9A-Za-z]{4}-4[0-9A-Za-z]{3}-[89ABab][0-9A-Za-z]{3}-[0-9A-Za-z]{12}",
     )
-    .unwrap()
+    .expect("Failed to create the REGEX")
 });
 
 fn validate_password(password: &str) -> Result<(), ValidationError> {

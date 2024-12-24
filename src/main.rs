@@ -27,13 +27,13 @@ async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(Env::default().default_filter_or("trace"));
 
     let pg_pool_conn_max_size =
-        env::var("PG_POOL_CONN_MAX_SIZE").unwrap_or_else(|_| 10.to_string());
+        env::var("PG_POOL_CONN_MAX_SIZE").unwrap_or_else(|_| "10".to_string());
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let pg_pool = match PgPoolOptions::new()
         .max_connections(
             pg_pool_conn_max_size
                 .parse()
-                .expect("Must be a valid number string"),
+                .expect("Must be a valid numeric string"),
         )
         .connect(&database_url)
         .await
@@ -43,23 +43,22 @@ async fn main() -> std::io::Result<()> {
             pool
         }
         Err(err) => {
-            log::info!("🔥 Failed to connect to the database: {:?}", err);
+            log::error!("🔥 Failed to connect to the database: {:?}", err);
             std::process::exit(1);
         }
     };
 
-    let ampq_pool_max_size = env::var("AMQP_POOL_MAX_SIZE").unwrap_or_else(|_| 10.to_string());
-    let ampq_addr =
-        env::var("AMQP_ADDR").unwrap_or_else(|_| "amqp://guest:guest@127.0.0.1:5672".into());
+    let ampq_pool_max_size = env::var("AMQP_POOL_MAX_SIZE").unwrap_or_else(|_| "10".to_string());
+    let ampq_addr = env::var("AMQP_ADDR").expect("AMPQ_ADDR must be set");
     let manager = deadpool_lapin::Manager::new(ampq_addr, ConnectionProperties::default());
     let ampq_pool: deadpool_lapin::Pool = deadpool::managed::Pool::builder(manager)
         .max_size(
             ampq_pool_max_size
                 .parse()
-                .expect("Must be a valid number string"),
+                .expect("Must be a valid numeric string"),
         )
         .build()
-        .expect("can create pool");
+        .expect("Failed to create RabbitMQ pool");
 
     HttpServer::new(move || {
         let cors = Cors::default()
