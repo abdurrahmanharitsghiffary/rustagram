@@ -1,11 +1,11 @@
 start:
-    cargo run
+	cargo run
 
 test:
-    cargo test
+	cargo test
 
 build:
-    cargo build
+	cargo build
 
 watch:
-	cargo watch -s "cargo run"
+	cargo watch -s 'cargo run'
