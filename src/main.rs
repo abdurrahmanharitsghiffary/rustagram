@@ -5,7 +5,7 @@ use actix_cors::Cors;
 use actix_web::{http::header, rt::System, web, App, HttpServer};
 mod app;
 mod common;
-mod config;
+mod entity;
 use common::service::rabbitmq::{
     channel::create_rabbitmq_channel, consumer::email_consumer, queue_name::QueueName,
 };

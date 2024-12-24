@@ -52,7 +52,7 @@ pub struct ResetPasswordDTO {
 
 #[derive(Deserialize, Debug, Validate)]
 pub struct RegisterDTO {
-    #[validate(email)]
+    #[validate(email, length(max = 255))]
     pub email: String,
 
     #[validate(custom(function = "validate_password",))]
@@ -66,4 +66,7 @@ pub struct RegisterDTO {
 
     #[validate(length(min = 2, max = 125))]
     pub last_name: Option<String>,
+
+    #[validate(length(min = 2, max = 100))]
+    pub username: String,
 }
