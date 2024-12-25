@@ -1,7 +1,5 @@
 -- Add up migration script here
 
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     username VARCHAR(100) NOT NULL UNIQUE,
@@ -13,7 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TRIGGER set_updated_at
+CREATE TRIGGER set_updated_at_users
 BEFORE UPDATE ON users
 FOR EACH ROW
 EXECUTE FUNCTION update_timestamp();

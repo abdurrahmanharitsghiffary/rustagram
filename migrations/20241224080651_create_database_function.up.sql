@@ -1,4 +1,5 @@
 -- Add up migration script here
+
 CREATE OR REPLACE FUNCTION update_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -6,3 +7,5 @@ BEGIN
     RETURN NEW;  -- Return the new row
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";

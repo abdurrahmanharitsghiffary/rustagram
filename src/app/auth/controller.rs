@@ -95,6 +95,24 @@ async fn get_user_details() -> impl Responder {
     }
 }
 
+#[post("/verify-account")]
+async fn verify_account() -> impl Responder {
+    WebResponse {
+        data: {},
+        message: "Verify your account".to_string(),
+        status_code: 200,
+    }
+}
+
+#[post("/request-verify-account")]
+async fn request_verify_account() -> impl Responder {
+    WebResponse {
+        data: {},
+        message: "Verify your account".to_string(),
+        status_code: 200,
+    }
+}
+
 pub fn config(conf: &mut web::ServiceConfig) {
     let scope = web::scope("/auth")
         .service(login)
@@ -102,7 +120,9 @@ pub fn config(conf: &mut web::ServiceConfig) {
         .service(reset_password)
         .service(register)
         .service(revoke_refresh_token)
-        .service(get_user_details);
+        .service(get_user_details)
+        .service(verify_account)
+        .service(request_verify_account);
 
     conf.service(scope);
 }
