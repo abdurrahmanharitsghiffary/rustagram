@@ -15,7 +15,7 @@ ALTER TABLE tokens
 ADD COLUMN user_id UUID NOT NULL,
 ADD CONSTRAINT fk_user_token
 FOREIGN KEY (user_id)
-REFERENCES "user" (id)
+REFERENCES "users" (id)
 ON DELETE CASCADE; 
 
 CREATE TRIGGER set_updated_at_tokens
