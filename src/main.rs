@@ -32,6 +32,9 @@ async fn main() -> std::io::Result<()> {
     let pg_pool_conn_max_size =
         env::var("PG_POOL_CONN_MAX_SIZE").unwrap_or_else(|_| "10".to_string());
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+
+    log::info!("{}", &database_url);
+
     let pg_pool = match PgPoolOptions::new()
         .max_connections(
             pg_pool_conn_max_size

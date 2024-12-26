@@ -1,0 +1,68 @@
+version: "3.9"
+services:
+  database:
+    image: postgres:15
+    container_name: rustagram_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+    ports:
+      - "${POSTGRES_PORT:-5432}:${POSTGRES_PORT:-5432}"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rabbit_mq:
+    image: rabbitmq:4.0-management
+    container_name: rustagram_mq
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST}
+      RABBITMQ_NODE_PORT: ${RABBITMQ_NODE_PORT}
+      RABBITMQ_NODE_IP_ADDRESS: ${RABBITMQ_NODE_IP_ADDRESS}
+      RABBITMQ_MANAGEMENT_BIND_IP: ${RABBITMQ_MANAGEMENT_BIND_IP}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rustagram_app
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      PG_POOL_CONN_MAX_SIZE: ${PG_POOL_CONN_MAX_SIZE}
+      AMQP_POOL_MAX_SIZE: ${AMQP_POOL_MAX_SIZE}
+      AMQP_ADDR: ${AMQP_ADDR}
+      JWT_SECRET: ${JWT_SECRET}
+
+    depends_on:
+      database:
+        condition: service_healthy
+      rabbit_mq:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    command: >
+      sh -c "
+      sqlx migrate run --database-url ${DATABASE_URL} &&
+      rustagram"
+
+volumes:
+  db_data:
