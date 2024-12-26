@@ -1,0 +1,64 @@
+name: Rustagram CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v2
+
+      - name: Set up Rust
+        uses: actions/setup-rust@v1
+        with:
+          rust-version: stable
+
+      - name: Cache Cargo registry and build
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Install dependencies
+        run: |
+          cargo build --release
+
+      - name: Run tests
+        run: |
+          cargo test --release
+
+      - name: Run Clippy (Rust linter)
+        run: |
+          cargo clippy -- -D warnings
+
+      - name: Format code with rustfmt
+        run: |
+          cargo fmt -- --check
+
+      - name: Build Docker image
+        run: |
+          docker build -t rustagram .
+
+      - name: Push Docker image to Docker Hub (optional)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker tag rustagram ${{ secrets.DOCKER_USERNAME }}/rustagram:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/rustagram:latest
+
+      - name: Deploy to Server (optional)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} 'bash -s' < deploy_script.sh
