@@ -2,7 +2,7 @@
 #![cfg_attr(feature = "clippy", plugin(clippy))]
 
 use actix_cors::Cors;
-use actix_web::{http::header, rt::System, web, App, HttpServer};
+use actix_web::{http::header, web, App, HttpServer};
 mod app;
 mod common;
 mod entity;
@@ -25,15 +25,12 @@ async fn main() -> std::io::Result<()> {
     if env::var_os("RUST_LOG").is_none() {
         env::set_var("RUST_LOG", "info");
     }
-
     dotenvy::dotenv().ok();
     env_logger::init_from_env(Env::default().default_filter_or("trace"));
 
     let pg_pool_conn_max_size =
         env::var("PG_POOL_CONN_MAX_SIZE").unwrap_or_else(|_| "10".to_string());
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-
-    log::info!("{}", &database_url);
 
     let pg_pool = match PgPoolOptions::new()
         .max_connections(
@@ -66,38 +63,35 @@ async fn main() -> std::io::Result<()> {
         .build()
         .expect("Failed to create RabbitMQ pool");
 
-    System::new().block_on(async {
-        let channel = create_rabbitmq_channel(&[QueueName::EmailQueue], &ampq_pool).await;
+    let channel = create_rabbitmq_channel(&[QueueName::EmailQueue], &ampq_pool).await;
+    tokio::spawn(email_consumer(channel.clone()));
 
-        tokio::spawn(email_consumer(channel.clone()));
+    HttpServer::new(move || {
+        let cors = Cors::default()
+            .allowed_origin("http://localhost:3000")
+            .allowed_methods(vec!["GET", "POST", "PATCH", "DELETE"])
+            .allowed_headers(vec![
+                header::CONTENT_TYPE,
+                header::AUTHORIZATION,
+                header::ACCEPT,
+            ])
+            .supports_credentials();
 
-        HttpServer::new(move || {
-            let cors = Cors::default()
-                .allowed_origin("http://localhost:3000")
-                .allowed_methods(vec!["GET", "POST", "PATCH", "DELETE"])
-                .allowed_headers(vec![
-                    header::CONTENT_TYPE,
-                    header::AUTHORIZATION,
-                    header::ACCEPT,
-                ])
-                .supports_credentials();
-
-            App::new()
-                .app_data(web::Data::new(AppState {
-                    db: pg_pool.clone(),
-                    ampq: ampq_pool.clone(),
-                }))
-                .service(
-                    web::scope("/api/v1")
-                        .configure(app::auth::controller::config)
-                        .configure(app::user::controller::config),
-                )
-                .configure(app::health::controller::config)
-                .wrap(cors)
-                .wrap(TracingLogger::default())
-        })
-        .bind(("127.0.0.1", 8080))?
-        .run()
-        .await
+        App::new()
+            .app_data(web::Data::new(AppState {
+                db: pg_pool.clone(),
+                ampq: ampq_pool.clone(),
+            }))
+            .service(
+                web::scope("/api/v1")
+                    .configure(app::auth::controller::config)
+                    .configure(app::user::controller::config),
+            )
+            .configure(app::health::controller::config)
+            .wrap(cors)
+            .wrap(TracingLogger::default())
     })
+    .bind(("127.0.0.1", 8080))?
+    .run()
+    .await
 }
