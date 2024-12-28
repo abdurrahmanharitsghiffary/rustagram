@@ -1,6 +1,6 @@
 -- Add up migration script here
 
-CREATE TYPE token_type AS ENUM ('acc_tkn', 'rsh_tkn', 'vry_tkn', 'rst_tkn');
+CREATE TYPE token_type AS ENUM ('access', 'refresh', 'verify', 'reset');
 
 CREATE TABLE IF NOT EXISTS tokens (
     id SERIAL PRIMARY KEY,

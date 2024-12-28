@@ -8,12 +8,14 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_PORT: ${POSTGRES_PORT}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - rustagram_db_network
+    # ports:
+      # - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -21,9 +23,11 @@ services:
   rabbit_mq:
     image: rabbitmq:4.0-management
     container_name: rustagram_mq
-    ports:
-      - "15672:15672"
-      - "5672:5672"
+    # ports:
+      # - "15672:15672"
+      # - "5672:5672"
+    networks:
+      - rustagram_ampq_network
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
@@ -42,6 +46,9 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: rustagram_app
+    networks:
+      - rustagram_ampq_network
+      - rustagram_db_network 
     environment:
       DATABASE_URL: ${DATABASE_URL}
       SMTP_USERNAME: ${SMTP_USERNAME}
@@ -65,3 +72,7 @@ services:
 
 volumes:
   db_data:
+
+networks:
+  rustagram_ampq_network:
+  rustagram_db_network:

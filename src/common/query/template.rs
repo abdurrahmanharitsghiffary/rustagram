@@ -1,5 +1,5 @@
 pub struct InsertTemplate {
-    query: String,
+    pub query: String,
 }
 
 impl InsertTemplate {
@@ -20,7 +20,7 @@ impl InsertTemplate {
 }
 
 pub struct UpdateTemplate {
-    query: String,
+    pub query: String,
 }
 
 impl UpdateTemplate {
