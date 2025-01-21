@@ -9,7 +9,7 @@ build:  # Build the application
 	cargo build --release
 
 watch:  # Watch for file changes and re-run the application
-	cargo watch -s 'cargo run'
+	cargo watch -x run
 
 lint:	# Run the linter
 	cargo clippy
