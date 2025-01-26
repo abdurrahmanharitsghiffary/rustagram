@@ -14,7 +14,7 @@ CREATE TYPE public.post_visibility_options AS ENUM (
     'ARCHIVED' 
     );
 
-CREATE TABLE IF NOT EXISTS public.posts (
+CREATE TABLE public.posts (
     id SERIAL PRIMARY KEY NOT NULL,
     content TEXT,
     "state" public.post_state_options NOT NULL DEFAULT 'DRAFT',
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS public.posts (
     updated_at TIMESTAMP DEFAULT NOW()    
 );
 
-CREATE INDEX IF NOT EXISTS idx_posts_visibility_public ON public.posts (visibility);
+CREATE INDEX idx_posts_visibility_public ON public.posts (visibility);
 
 ALTER TABLE public.posts
 ADD COLUMN user_id UUID NOT NULL,
@@ -38,7 +38,7 @@ FOR EACH ROW
 EXECUTE FUNCTION update_timestamp();
 
 
-CREATE TABLE IF NOT EXISTS public.shared_posts (
+CREATE TABLE public.shared_posts (
     id SERIAL PRIMARY KEY NOT NULL,
     content TEXT,
     "state" public.post_state_options NOT NULL DEFAULT 'DRAFT',
@@ -67,7 +67,7 @@ FOR EACH ROW
 EXECUTE FUNCTION update_timestamp();
 
 
-CREATE TABLE IF NOT EXISTS public.post_attachments (
+CREATE TABLE public.post_attachments (
     id SERIAL PRIMARY KEY NOT NULL,
     src VARCHAR(375) NOT NULL,
     mime_type VARCHAR(50) NOT NULL
@@ -82,7 +82,7 @@ ON DELETE CASCADE,
 ADD CONSTRAINT uniq_src
 UNIQUE (src);
 
-CREATE TABLE IF NOT EXISTS public.post_tags (
+CREATE TABLE public.post_tags (
     id SERIAL PRIMARY KEY NOT NULL,
     tag VARCHAR(100) NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
@@ -94,7 +94,7 @@ BEFORE UPDATE ON public.post_tags
 FOR EACH ROW
 EXECUTE FUNCTION update_timestamp();
 
-CREATE TABLE IF NOT EXISTS public.posts_tags (
+CREATE TABLE public.posts_tags (
     tag_id INT NOT NULL,
     post_id INT NOT NULL,
     CONSTRAINT pk_post_tags PRIMARY KEY (tag_id, post_id),
@@ -112,7 +112,7 @@ CREATE TYPE public.reactions_options AS ENUM (
     'OMG'
     );
 
-CREATE TABLE IF NOT EXISTS public.post_reactions (
+CREATE TABLE public.post_reactions (
     reaction public.reactions_options NOT NULL DEFAULT 'THUMB',
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
@@ -129,7 +129,7 @@ BEFORE UPDATE ON public.post_reactions
 FOR EACH ROW
 EXECUTE FUNCTION update_timestamp();
 
-CREATE TABLE IF NOT EXISTS public.post_comments (
+CREATE TABLE public.post_comments (
     id SERIAL PRIMARY KEY NOT NULL,
     content TEXT,
     gif VARCHAR(325),

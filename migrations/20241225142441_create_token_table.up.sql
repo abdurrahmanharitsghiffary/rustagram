@@ -6,7 +6,7 @@ CREATE TYPE public.token_type_options AS ENUM (
     'OTP'
     );
 
-CREATE TABLE IF NOT EXISTS public.tokens (
+CREATE TABLE public.tokens (
     id SERIAL PRIMARY KEY NOT NULL,
     token VARCHAR(255) NOT NULL UNIQUE,
     token_type public.token_type_options NOT NULL,

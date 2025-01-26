@@ -10,7 +10,7 @@ CREATE TYPE public.mention_permission_options AS ENUM ('EVERYONE', 'FOLLOWED', '
 CREATE TYPE public.comments_permission_options AS ENUM ('EVERYONE', 'FOLLOWED', 'FOLLOWERS', 'FOLLOWED_AND_FOLLOWERS');
 CREATE TYPE public.account_visibility_options AS ENUM ('PRIVATE', 'PUBLIC');
 
-CREATE TABLE IF NOT EXISTS public.user_settings (
+CREATE TABLE public.user_settings (
     id SERIAL PRIMARY KEY NOT NULL,
     account_visibility_option public.account_visibility_options NOT NULL DEFAULT 'PUBLIC',
     sensitive_content_control_option public.sensitivity_content_control_options NOT NULL DEFAULT 'STANDARD',
@@ -45,7 +45,7 @@ CREATE TYPE public.notification_settings_options AS ENUM ('OFF', 'ON', 'EVERYONE
 CREATE TYPE public.notification_type_options AS ENUM ('EMAIL', 'PUSH');
 
 
-CREATE TABLE IF NOT EXISTS public.user_notification_settings (
+CREATE TABLE public.user_notification_settings (
     id SERIAL PRIMARY KEY NOT NULL,
     scope VARCHAR(50) NOT NULL,
     notification_type public.notification_type_options NOT NULL,

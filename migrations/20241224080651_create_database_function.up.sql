@@ -8,4 +8,4 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION "pgcrypto";

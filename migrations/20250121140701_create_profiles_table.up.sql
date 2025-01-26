@@ -2,7 +2,7 @@
 
 CREATE TYPE public.gender_options AS ENUM ('MALE', 'FEMALE', 'SECRET');
 
-CREATE TABLE IF NOT EXISTS public.profiles (
+CREATE TABLE public.profiles (
     user_id UUID PRIMARY KEY,
     first_name VARCHAR(125) NOT NULL,
     last_name VARCHAR(125),

@@ -8,7 +8,7 @@ CREATE TYPE public.account_type_options AS ENUM (
     );
 
 
-CREATE TABLE IF NOT EXISTS public.accounts (
+CREATE TABLE public.accounts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     account_id VARCHAR(125),
     account_hashed_password VARCHAR(255),
@@ -32,7 +32,7 @@ BEFORE UPDATE ON public.accounts
 FOR EACH ROW
 EXECUTE FUNCTION update_timestamp();
 
-CREATE TABLE IF NOT EXISTS public.account_sessions (
+CREATE TABLE public.account_sessions (
     id SERIAL PRIMARY KEY NOT NULL,
     refresh_token VARCHAR(255) NOT NULL,
     user_agent VARCHAR(255) NOT NULL,
