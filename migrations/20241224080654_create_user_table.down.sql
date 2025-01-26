@@ -1,8 +1,8 @@
 -- Add down migration script here
 
-DROP TRIGGER IF EXISTS set_updated_at_users ON users;
+DROP TRIGGER set_updated_at_users ON public.users;
 
-DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE public.users;
 
-DROP TYPE IF EXISTS visibility_type;
-DROP TYPE IF EXISTS user_role;
+DROP TYPE public.activity_status_options;
+DROP TYPE public.user_role;

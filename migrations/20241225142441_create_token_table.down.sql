@@ -1,12 +1,13 @@
 -- Add down migration script here
 
-DROP TRIGGER IF EXISTS set_updated_at_tokens ON tokens;
+DROP TRIGGER set_updated_at_tokens ON public.tokens;
 
-ALTER TABLE tokens
-DROP CONSTRAINT fk_user_token;
-ALTER TABLE tokens
-DROP COLUMN user_id;
+ALTER TABLE public.tokens
+    DROP CONSTRAINT fk_user_token;
 
-DROP TABLE IF EXISTS tokens CASCADE;
+ALTER TABLE public.tokens
+    DROP COLUMN user_id;
 
-DROP TYPE IF EXISTS token_type;
+DROP TABLE public.tokens;
+
+DROP TYPE public.token_type_options;

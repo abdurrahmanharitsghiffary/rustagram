@@ -1,7 +1,10 @@
 -- Add down migration script here
 
-DROP TRIGGER IF EXISTS set_updated_at_profiles ON profiles;
+DROP TRIGGER set_updated_at_profiles ON public.profiles;
 
-DROP TABLE IF EXISTS profiles CASCADE;
+ALTER TABLE public.profiles
+    DROP CONSTRAINT fk_user_profile;
 
-DROP TYPE IF EXISTS user_gender;
+DROP TABLE public.profiles;
+
+DROP TYPE public.gender_options;
