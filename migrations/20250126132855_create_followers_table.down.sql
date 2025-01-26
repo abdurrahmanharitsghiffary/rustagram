@@ -10,4 +10,4 @@ DROP CONSTRAINT fk_following_users;
 
 DROP TABLE followers_followings;
 
-DROP TYPE following_status_options AS ENUM ('PENDING', 'ACCEPTED');
+DROP TYPE following_status_options;

@@ -6,7 +6,7 @@ CREATE TABLE public.blockers_blocked (
     unblocked_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
-    CONSTRAINT pk_blocker_blocked PRIMARY KEY (blocker_id, blocker_id)
+    CONSTRAINT pk_blocker_blocked PRIMARY KEY (blocker_id, blocked_id)
 );
 
 ALTER TABLE public.blockers_blocked
