@@ -1,31 +1,39 @@
+x-postgres-env: &x-postgres-env
+  environment:
+    POSTGRES_USER: ${POSTGRES_USER}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    POSTGRES_DB: ${POSTGRES_DB}
+    POSTGRES_HOST: ${POSTGRES_HOST}
+    PGPORT: ${POSTGRES_PORT}
+
+x-app-env: &x-app-env
+  environment:
+    DATABASE_URL: ${DATABASE_URL}
+    SMTP_USERNAME: ${SMTP_USERNAME}
+    SMTP_PASSWORD: ${SMTP_PASSWORD}
+    PG_POOL_CONN_MAX_SIZE: ${PG_POOL_CONN_MAX_SIZE}
+    AMQP_POOL_MAX_SIZE: ${AMQP_POOL_MAX_SIZE}
+    AMQP_ADDR: ${AMQP_ADDR}
+    JWT_SECRET: ${JWT_SECRET}
+
 services:
   database:
+    <<: *x-postgres-env
     image: postgres:15
     container_name: rustagram_db
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_PORT: ${POSTGRES_PORT}
     networks:
       - rustagram_db_network
-    # ports:
-      # - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} -h ${POSTGRES_HOST} -p ${POSTGRES_PORT}"]
+      interval: 10s
       timeout: 5s
       retries: 5
 
   rabbit_mq:
     image: rabbitmq:4.0-management
     container_name: rustagram_mq
-    # ports:
-      # - "15672:15672"
-      # - "5672:5672"
     networks:
       - rustagram_ampq_network
     environment:
@@ -42,6 +50,7 @@ services:
       retries: 3
 
   app:
+    <<: *x-app-env
     build:
       context: .
       dockerfile: Dockerfile
@@ -49,26 +58,29 @@ services:
     networks:
       - rustagram_ampq_network
       - rustagram_db_network 
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      SMTP_USERNAME: ${SMTP_USERNAME}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-      PG_POOL_CONN_MAX_SIZE: ${PG_POOL_CONN_MAX_SIZE}
-      AMQP_POOL_MAX_SIZE: ${AMQP_POOL_MAX_SIZE}
-      AMQP_ADDR: ${AMQP_ADDR}
-      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+    ports:
+      - "8080:8080"
+    command: >
+      sh -c "rustagram"
 
+  migrator:
+    <<: *x-app-env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - rustagram_ampq_network
+      - rustagram_db_network 
     depends_on:
       database:
         condition: service_healthy
       rabbit_mq:
         condition: service_healthy
-    ports:
-      - "8080:8080"
     command: >
-      sh -c "
-      sqlx migrate run --database-url ${DATABASE_URL} --source /usr/src/app/migrations &&
-      rustagram"
+      sh -c "sqlx migrate run --database-url ${DATABASE_URL} --source /usr/src/app/migrations"
 
 volumes:
   db_data:
