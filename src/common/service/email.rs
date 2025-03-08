@@ -1,11 +1,16 @@
-use std::env;
-
 use lettre::{
     message::header::ContentType, transport::smtp::authentication::Credentials, Message,
     SmtpTransport, Transport,
 };
 
-pub fn send_email(to: &str, subject: &str, body: &str) -> Result<(), String> {
+use crate::config::settings::SMTPSettings;
+
+pub fn send_email(
+    settings: &SMTPSettings,
+    to: &str,
+    subject: &str,
+    body: &str,
+) -> Result<(), String> {
     let email = match Message::builder()
         .from(
             "Rustagram <rustagram124@gmail.com>"
@@ -21,10 +26,7 @@ pub fn send_email(to: &str, subject: &str, body: &str) -> Result<(), String> {
         Err(e) => return Err(format!("Could not send email: {e:?}")),
     };
 
-    let creds = Credentials::new(
-        env::var("SMTP_USERNAME").expect("SMTP_USERNAME must be set"),
-        env::var("SMTP_PASSWORD").expect("SMTP_PASSWORD must be set"),
-    );
+    let creds = Credentials::new(settings.username.clone(), settings.password.clone());
 
     let mailer = SmtpTransport::relay("smtp.gmail.com")
         .expect("Failed to build the SMTP Transport")

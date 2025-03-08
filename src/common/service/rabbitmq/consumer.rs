@@ -1,6 +1,7 @@
 use crate::common::service::email::send_email;
 
 use super::{consumer_tag::ConsumerTag, queue_name::QueueName};
+use crate::config::settings::SMTPSettings;
 use lapin::{
     options::{BasicAckOptions, BasicConsumeOptions},
     types::FieldTable,
@@ -14,7 +15,7 @@ pub struct EmailTask {
     pub body: String,
 }
 
-pub async fn email_consumer(channel: lapin::Channel) {
+pub async fn email_consumer(channel: lapin::Channel, settings: SMTPSettings) {
     let mut consumer = channel
         .basic_consume(
             &QueueName::EmailQueue.value(),
@@ -31,7 +32,12 @@ pub async fn email_consumer(channel: lapin::Channel) {
         let email_task: EmailTask =
             serde_json::from_slice(&delivery.data).expect("Failed to Serialize EmailTask");
 
-        match send_email(&email_task.to, &email_task.subject, &email_task.body) {
+        match send_email(
+            &settings,
+            &email_task.to,
+            &email_task.subject,
+            &email_task.body,
+        ) {
             Err(err) => {
                 log::error!("Failed sending email to {} : {}", &email_task.to, err);
             }

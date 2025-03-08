@@ -5,40 +5,43 @@ use actix_cors::Cors;
 use actix_web::{http::header, web, App, HttpServer};
 mod app;
 mod common;
+mod config;
 mod entity;
 use common::service::rabbitmq::{
     channel::create_rabbitmq_channel, consumer::email_consumer, queue_name::QueueName,
 };
+use config::settings::AppSettings;
 use env_logger::Env;
 use lapin::ConnectionProperties;
 use sqlx::{postgres::PgPoolOptions, Postgres};
 use std::env;
 use tracing_actix_web::TracingLogger;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
+
+#[derive(OpenApi)]
+#[openapi(info(description = "Rustagram Clone Open API"))]
+struct ApiDoc;
 
 struct AppState {
+    settings: AppSettings,
     db: sqlx::Pool<Postgres>,
     ampq: deadpool::managed::Pool<deadpool_lapin::Manager>,
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    if env::var_os("RUST_LOG").is_none() {
-        env::set_var("RUST_LOG", "info");
+    let settings = AppSettings::new();
+
+    if env::var_os("APP_RUST_LOG").is_none() {
+        env::set_var("APP_RUST_LOG", "info");
     }
-    dotenvy::dotenv().ok();
+
     env_logger::init_from_env(Env::default().default_filter_or("trace"));
 
-    let pg_pool_conn_max_size =
-        env::var("PG_POOL_CONN_MAX_SIZE").unwrap_or_else(|_| "10".to_string());
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-
     let pg_pool = match PgPoolOptions::new()
-        .max_connections(
-            pg_pool_conn_max_size
-                .parse()
-                .expect("Must be a valid numeric string"),
-        )
-        .connect(&database_url)
+        .max_connections(settings.database.pool_size)
+        .connect(&settings.database_url)
         .await
     {
         Ok(pool) => {
@@ -51,20 +54,16 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
-    let ampq_pool_max_size = env::var("AMQP_POOL_MAX_SIZE").unwrap_or_else(|_| "10".to_string());
-    let ampq_addr = env::var("AMQP_ADDR").expect("AMPQ_ADDR must be set");
-    let manager = deadpool_lapin::Manager::new(ampq_addr, ConnectionProperties::default());
+    let manager =
+        deadpool_lapin::Manager::new(&settings.rabbitmq_url, ConnectionProperties::default());
     let ampq_pool: deadpool_lapin::Pool = deadpool::managed::Pool::builder(manager)
-        .max_size(
-            ampq_pool_max_size
-                .parse()
-                .expect("Must be a valid numeric string"),
-        )
+        .max_size(settings.rabbitmq.pool_size)
         .build()
         .expect("Failed to create RabbitMQ pool");
 
     let channel = create_rabbitmq_channel(&[QueueName::EmailQueue], &ampq_pool).await;
-    tokio::spawn(email_consumer(channel.clone()));
+
+    tokio::spawn(email_consumer(channel.clone(), settings.smtp.clone()));
 
     HttpServer::new(move || {
         let cors = Cors::default()
@@ -79,6 +78,7 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .app_data(web::Data::new(AppState {
+                settings: settings.clone(),
                 db: pg_pool.clone(),
                 ampq: ampq_pool.clone(),
             }))
@@ -86,6 +86,10 @@ async fn main() -> std::io::Result<()> {
                 web::scope("/api/v1")
                     .configure(app::auth::controller::config)
                     .configure(app::user::controller::config),
+            )
+            .service(
+                SwaggerUi::new("/swagger-ui/{_:.*}")
+                    .url("/api-docs/openapi.json", ApiDoc::openapi()),
             )
             .configure(app::health::controller::config)
             .wrap(cors)

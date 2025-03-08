@@ -1,12 +1,13 @@
-use std::{
-    env,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use super::claims::Claims;
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
 
-pub fn generate_token(sub: String, exp: u64) -> Result<String, jsonwebtoken::errors::Error> {
+pub fn generate_token(
+    sub: String,
+    exp: u64,
+    secret: String,
+) -> Result<String, jsonwebtoken::errors::Error> {
     let header = Header::new(Algorithm::HS512);
 
     let claims = Claims {
@@ -22,11 +23,7 @@ pub fn generate_token(sub: String, exp: u64) -> Result<String, jsonwebtoken::err
         sub,
     };
 
-    let encoding_key = EncodingKey::from_secret(
-        env::var("JWT_SECRET")
-            .expect("JWT_SECRET must be set")
-            .as_ref(),
-    );
+    let encoding_key = EncodingKey::from_secret(secret.as_ref());
 
     encode(&header, &claims, &encoding_key)
 }
